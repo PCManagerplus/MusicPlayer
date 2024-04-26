@@ -1,108 +1,192 @@
-<body>
-  <div class="player-container">
-    <!-- ローディングアニメーション -->
-    <div class="progress">
-      <div class="indeterminate"></div>
-    </div>
-
-    <!-- 各ボタンに対して音源を追加 -->
-    <audio id="audio-play" src="https://github.com/PCManagerplus/media.web/raw/main/Effect_Tick%20lenovo.wav"></audio>
-    <audio id="audio-pause" src="https://github.com/PCManagerplus/media.web/raw/main/Effect_Tick%20lenovo.wav"></audio>
-    <audio id="audio-stop" src="https://github.com/PCManagerplus/media.web/raw/main/Effect_Tick%20lenovo.wav"></audio>
-
-    <audio id="audio-player">
-      <source src="https://github.com/PCManagerplus/media.web/raw/main/7%20Scivola%20(Instrumental%20Version).mp3" type="audio/mpeg">
-      Your browser does not support the audio element.
-    </audio>
-    <div id="status">未再生</div>
-    <!-- 再生ボタン -->
-    <a class="waves-effect waves-light btn" id="play-button">再生</a>
-    <!-- 一時停止ボタン -->
-    <a class="waves-effect waves-light btn" id="pause-button">一時停止</a>
-    <!-- 停止ボタン -->
-    <a class="waves-effect waves-light btn red" id="stop-button">停止</a>
-    <!-- ダウンロードボタン -->
-    <a class="waves-effect waves-light btn" id="download-button" href="https://github.com/PCManagerplus/media.web/raw/main/7%20Scivola%20(Instrumental%20Version).mp3" download>ダウンロード</a>
-    <!-- 再生バー -->
-    <div class="progress-bar">
-      <input type="range" id="seek-bar" min="0" max="100" value="0">
-    </div>
-  </div>
-
-  <!-- ポップアップメッセージのモーダル -->
-  <div id="popup-modal" class="modal">
-    <div class="modal-content">
-      <h4>再生完了</h4>
-      <p>曲の再生が完了しました。</p>
-    </div>
-    <div class="modal-footer">
-      <a href="#!" class="modal-close waves-effect waves-green btn-flat">OK</a>
-    </div>
-  </div>
-
-  <!-- Materialize CSS のスクリプト -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script>
-    const audioPlayer = document.getElementById('audio-player');
-    const playButton = document.getElementById('play-button');
-    const pauseButton = document.getElementById('pause-button');
-    const stopButton = document.getElementById('stop-button');
-    const status = document.getElementById('status');
-    const seekBar = document.getElementById('seek-bar');
-    const loadingIndicator = document.querySelector('.progress');
-    const modal = document.getElementById('popup-modal');
-
-    // 音楽ファイルの読み込み完了時にローディングアニメーションを非表示にする
-    audioPlayer.addEventListener('loadedmetadata', function() {
-      loadingIndicator.style.display = 'none';
-    });
-
-    // 再生中のタイマーを更新する関数
-    function updateProgressBar() {
-      const duration = audioPlayer.duration;
-      const currentTime = audioPlayer.currentTime;
-      const progress = (currentTime / duration) * 100;
-      seekBar.value = progress;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android風音楽プレーヤー</title>
+  <!-- Materialize CSSのリンク -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <style>
+    /* 追加のスタイル */
+    .player-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+      width: 100%; /* プレーヤーを親要素の幅いっぱいに広げる */
+      height: 500px; /* プレーヤーの高さを調整 */
     }
 
-    // ユーザーが再生バーを操作したときの処理
-    seekBar.addEventListener('input', function() {
-      const seekPosition = audioPlayer.duration * (seekBar.value / 100);
-      audioPlayer.currentTime = seekPosition;
-    });
+    .player-container:hover .player-controls {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-    playButton.addEventListener('click', function() {
-      audioPlayer.play();
-      document.getElementById('audio-play').play(); // 再生音を再生
-      status.textContent = '再生中';
-      // 再生中のタイマーを開始
-      setInterval(updateProgressBar, 100);
-    });
+    .player-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      opacity: 0;
+      transform: translateY(100%);
+      transition: opacity 0.3s, transform 0.3s;
+    }
 
-    pauseButton.addEventListener('click', function() {
-      audioPlayer.pause();
-      document.getElementById('audio-pause').play(); // 一時停止音を再生
-      status.textContent = '一時停止中';
-    });
+    /* イコライザーのスタイル */
+    .eq-slider {
+      width: 100%;
+    }
 
-    stopButton.addEventListener('click', function() {
-      audioPlayer.pause();
-      audioPlayer.currentTime = 0;
-      document.getElementById('audio-stop').play(); // 停止音を再生
-      status.textContent = '停止';
-    });
+    /* 追加のスタイル */
+    .error-text {
+      color: red;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="center-align">Android風音楽プレーヤー</h1>
+    <div class="row">
+      <div class="col s12 m6 offset-m3">
+        <div class="input-field">
+          <input id="externalLink" type="text" class="validate">
+          <label for="externalLink">外部リンクから曲を追加</label>
+          <!-- エラーメッセージ -->
+          <span class="error-text">https://で始まる言葉を入力してください</span>
+        </div>
+        <button class="btn waves-effect waves-light" id="addExternalLink">追加</button>
+      </div>
+    </div>
+    <!-- ローカルファイルを読み込むためのフォーム -->
+    <form id="fileForm" class="row">
+      <div class="col s12 m6 offset-m3">
+        <div class="file-field input-field">
+          <!-- アニメーションを追加 -->
+          <div class="btn waves-effect waves-light">
+            <span>ローカルファイルを選択</span>
+            <input type="file" id="fileInput">
+          </div>
+          <div class="file-path-wrapper">
+            <input class="file-path validate" type="text">
+          </div>
+        </div>
+      </div>
+    </form>
+    <div class="row">
+      <div class="col s12 m6 offset-m3 player-container">
+        <audio controls id="audioPlayer">
+          <source src="music1.mp3" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
+        <div class="player-controls">
+          <button class="btn waves-effect waves-light" id="prevButton">前へ</button>
+          <button class="btn waves-effect waves-light" id="playButton">再生/停止</button>
+          <button class="btn waves-effect waves-light" id="nextButton">次へ</button>
+          <div class="eq-slider">
+            <p class="range-field">
+              <label for="eqLowGain">低域</label>
+              <input type="range" id="eqLowGain" min="-40" max="40" step="1" value="0">
+            </p>
+            <p class="range-field">
+              <label for="eqMidGain">中域</label>
+              <input type="range" id="eqMidGain" min="-40" max="40" step="1" value="0">
+            </p>
+            <p class="range-field">
+              <label for="eqHighGain">高域</label>
+              <input type="range" id="eqHighGain" min="-40" max="40" step="1" value="0">
+            </p>
+          </div>
+          <p class="range-field">
+            <label for="volumeControl">音量</label>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1"/>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    audioPlayer.addEventListener('ended', function() {
-      status.textContent = '再生終了';
-      // 再生が完了したらポップアップメッセージを表示
-      const instance = M.Modal.getInstance(modal);
-      instance.open();
-    });
-
-    // モーダルを初期化
+  <!-- Materialize JavaScriptのリンク -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const modalElems = document.querySelectorAll('.modal');
-      M.Modal.init(modalElems);
+      // Materialize CSSの初期化
+      M.AutoInit();
+
+      const audioPlayer = document.getElementById('audioPlayer');
+      const playButton = document.getElementById('playButton');
+      const addExternalLinkButton = document.getElementById('addExternalLink');
+      const externalLinkInput = document.getElementById('externalLink');
+      const volumeControl = document.getElementById('volumeControl');
+      const errorText = document.querySelector('.error-text');
+      const fileInput = document.getElementById('fileInput');
+      const eqLowGain = document.getElementById('eqLowGain');
+      const eqMidGain = document.getElementById('eqMidGain');
+      const eqHighGain = document.getElementById('eqHighGain');
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaElementSource(audioPlayer);
+      const eqLow = audioContext.createBiquadFilter();
+      const eqMid = audioContext.createBiquadFilter();
+      const eqHigh = audioContext.createBiquadFilter();
+
+      // イコライザーの設定
+      eqLow.type = 'lowshelf';
+      eqMid.type = 'peaking';
+      eqHigh.type = 'highshelf';
+
+      source.connect(eqLow);
+      eqLow.connect(eqMid);
+      eqMid.connect(eqHigh);
+      eqHigh.connect(audioContext.destination);
+
+      // 外部リンク追加ボタンのクリックイベント
+      addExternalLinkButton.addEventListener('click', function() {
+        const externalLink = externalLinkInput.value.trim();
+        if (externalLink === '' || !externalLink.startsWith('https://')) {
+          // エラーメッセージを表示
+          errorText.style.display = 'block';
+          // 赤色に変更
+          errorText.style.color = 'red';
+        } else {
+          // エラーメッセージを非表示に
+          errorText.style.display = 'none';
+          // 元の色に戻す
+          errorText.style.color = '';
+          externalLinkInput.value = ''; // 入力フィールドをクリア
+        }
+      });
+
+      // ローカルファイル選択フォームの変更イベント
+      fileInput.addEventListener('change', function() {
+        const files = fileInput.files;
+        if (files.length > 0) {
+          const file = files[0];
+          const objectUrl = URL.createObjectURL(file);
+          audioPlayer.src = objectUrl;
+          audioPlayer.play();
+        }
+      });
+
+      // 音量調節スライダーの変更イベント
+      volumeControl.addEventListener('input', function() {
+        audioPlayer.volume = volumeControl.value; // 音量をスライダーの値に設定
+      });
+
+      // イコライザーのスライダーの変更イベント
+      eqLowGain.addEventListener('input', function() {
+        eqLow.gain.value = eqLowGain.value;
+      });
+
+      eqMidGain.addEventListener('input', function() {
+        eqMid.gain.value = eqMidGain.value;
+      });
+
+      eqHighGain.addEventListener('input', function() {
+        eqHigh.gain.value = eqHighGain.value;
+      });
     });
   </script>
 </body>
+</html>
