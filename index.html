@@ -34,8 +34,9 @@
       margin-top: 20px;
     }
 
-    .equalizer-label {
-      margin-top: 20px;
+    .eq-slider {
+      width: 80%;
+      margin: 0 auto 20px;
     }
   </style>
 </head>
@@ -52,26 +53,63 @@
       <input class="file-path validate" type="text" placeholder="音楽ファイルをアップロード">
     </div>
   </div>
-  <div class="equalizer">
-    <p class="equalizer-label">イコライザー</p>
-    <input type="range" min="0" max="100" value="50" class="slider" id="eq-slider">
+
+  <div class="eq-sliders">
+    <label>低音</label>
+    <input type="range" class="eq-slider" id="low" min="0" max="10" value="5">
+    <label>中音</label>
+    <input type="range" class="eq-slider" id="mid" min="0" max="10" value="5">
+    <label>高音</label>
+    <input type="range" class="eq-slider" id="high" min="0" max="10" value="5">
   </div>
+  
   <audio id="audio-player" controls></audio>
 </div>
 
 <!-- Materialize JavaScript CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
+  const audioPlayer = document.getElementById('audio-player');
+  const lowSlider = document.getElementById('low');
+  const midSlider = document.getElementById('mid');
+  const highSlider = document.getElementById('high');
+
+  audioPlayer.addEventListener('loadedmetadata', function() {
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaElementSource(audioPlayer);
+    const lowFilter = audioContext.createBiquadFilter();
+    const midFilter = audioContext.createBiquadFilter();
+    const highFilter = audioContext.createBiquadFilter();
+
+    lowFilter.type = 'lowshelf';
+    midFilter.type = 'peaking';
+    highFilter.type = 'highshelf';
+
+    source.connect(lowFilter);
+    lowFilter.connect(midFilter);
+    midFilter.connect(highFilter);
+    highFilter.connect(audioContext.destination);
+
+    lowSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      lowFilter.gain.value = value;
+    });
+
+    midSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      midFilter.gain.value = value;
+    });
+
+    highSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      highFilter.gain.value = value;
+    });
+  });
+
   document.getElementById('audio-file').addEventListener('change', function(event) {
-    const audioPlayer = document.getElementById('audio-player');
     const file = this.files[0];
     const objectURL = URL.createObjectURL(file);
     audioPlayer.src = objectURL;
-  });
-
-  document.getElementById('eq-slider').addEventListener('input', function(event) {
-    const audioPlayer = document.getElementById('audio-player');
-    audioPlayer.volume = event.target.value / 100;
   });
 </script>
 
