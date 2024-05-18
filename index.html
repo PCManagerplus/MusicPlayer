@@ -108,6 +108,7 @@
     const midFilter = audioContext.createBiquadFilter();
     const highFilter = audioContext.createBiquadFilter();
     const gainNode = audioContext.createGain();
+    const analyser = audioContext.createAnalyser();
 
     lowFilter.type = 'lowshelf';
     midFilter.type = 'peaking';
@@ -118,6 +119,7 @@
     midFilter.connect(highFilter);
     highFilter.connect(gainNode);
     gainNode.connect(audioContext.destination);
+    source.connect(analyser);
 
     lowSlider.addEventListener('input', function() {
       const value = parseFloat(this.value);
@@ -143,5 +145,37 @@
       audioContext.resume();
     }
 
-    const analyser = audioContext.createAnalyser();
-    source.connect(analyser
+    function draw() {
+      requestAnimationFrame(draw);
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      dataArray.forEach(function(data) {
+        const barHeight = data / 2;
+
+        ctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
+
+        x += barWidth + 1;
+      });
+    }
+
+    draw();
+  });
+
+  document.getElementById('audio-file').addEventListener('change', function(event) {
+    const file = this.files[0];
+    const objectURL = URL.createObjectURL(file);
+    audioPlayer.src = objectURL;
+  });
+</script>
+
+</body>
+</html>
