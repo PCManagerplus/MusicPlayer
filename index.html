@@ -151,6 +151,26 @@
     }
 
     draw();
+
+    lowSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      lowFilter.gain.value = value;
+    });
+
+    midSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      midFilter.gain.value = value;
+    });
+
+    highSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      highFilter.gain.value = value;
+    });
+
+    volumeSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      gainNode.gain.value = value;
+    });
   }
 
   document.getElementById('audio-file').addEventListener('change', function(event) {
