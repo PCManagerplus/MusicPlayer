@@ -6,6 +6,7 @@
   <title>音楽プレーヤー</title>
   <!-- Materialize CSS CDN -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
   <style>
     html, body {
       width: 100%;
@@ -59,6 +60,7 @@
 
     canvas {
       margin-top: 20px;
+      width: 100%;
     }
   </style>
 </head>
@@ -97,6 +99,16 @@
 <!-- Materialize JavaScript CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      })
+      .catch(error => {
+        console.log('ServiceWorker registration failed: ', error);
+      });
+  }
+
   const audioPlayer = document.getElementById('audio-player');
   const lowSlider = document.getElementById('low');
   const midSlider = document.getElementById('mid');
@@ -125,7 +137,7 @@
     gainNode.connect(analyser);
     analyser.connect(audioContext.destination);
 
-    canvas.width = canvas.parentNode.offsetWidth * 0.8; // キャンバスの幅を親要素の幅の80%に設定
+    canvas.width = canvas.parentNode.offsetWidth * 0.8;
     canvas.height = 200;
 
     function draw() {
@@ -134,18 +146,15 @@
       const dataArray = new Uint8Array(bufferLength);
       analyser.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = 'rgb(255, 255, 255)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const barWidth = (canvas.width / bufferLength) * 2.5;
       let x = 0;
 
       dataArray.forEach(function(data) {
         const barHeight = data / 2;
-
         ctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
         ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
-
         x += barWidth + 1;
       });
     }
@@ -181,7 +190,8 @@
   });
 
   window.addEventListener('resize', function() {
-    updateEqualizer();
+    canvas.width = canvas.parentNode.offsetWidth * 0.8;
+    canvas.height = 200;
   });
 
 </script>
