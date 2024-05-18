@@ -1,181 +1,55 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>音楽プレーヤー</title>
-  <!-- Materialize CSSのリンク -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <style>
-    /* 追加のスタイル */
-    .player-container {
-      position: relative;
-      overflow: hidden;
-      border-radius: 10px;
-      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
-      width: 100%;
-      height: 500px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Player</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
 
-    .player-container:hover .player-controls {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .container {
+    text-align: center;
+  }
 
-    .player-controls {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      opacity: 0;
-      transform: translateY(100%);
-      transition: opacity 0.3s, transform 0.3s;
-    }
+  h1 {
+    color: #333;
+  }
 
-    /* イコライザーのスタイル */
-    .eq-slider {
-      width: 100%;
-    }
+  input[type="file"] {
+    margin: 20px 0;
+  }
 
-    /* 追加のスタイル */
-    .error-text {
-      color: red;
-      display: none;
-    }
-  </style>
+  audio {
+    width: 100%;
+    margin-top: 20px;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1 class="center-align">音楽プレーヤー</h1>
-    <div class="row">
-      <div class="col s12 m6 offset-m3">
-        <div class="input-field">
-          <input id="externalLink" type="text" class="validate">
-          <label for="externalLink">外部リンクから曲を追加</label>
-          <span class="error-text">https://で始まる言葉を入力してください</span>
-        </div>
-        <button class="btn waves-effect waves-light" id="addExternalLink">追加</button>
-      </div>
-    </div>
-    <form id="fileForm" class="row">
-      <div class="col s12 m6 offset-m3">
-        <div class="file-field input-field">
-          <div class="btn waves-effect waves-light">
-            <span>ローカルファイルを選択</span>
-            <input type="file" id="fileInput">
-          </div>
-          <div class="file-path-wrapper">
-            <input class="file-path validate" type="text">
-          </div>
-        </div>
-      </div>
-    </form>
-    <div class="row">
-      <div class="col s12 m6 offset-m3 player-container">
-        <audio controls id="audioPlayer">
-          <source src="music1.mp3" type="audio/mpeg">
-          Your browser does not support the audio element.
-        </audio>
-        <div class="player-controls">
-          <button class="btn waves-effect waves-light" id="prevButton">前へ</button>
-          <button class="btn waves-effect waves-light" id="playButton">再生/停止</button>
-          <button class="btn waves-effect waves-light" id="nextButton">次へ</button>
-          <div class="eq-slider">
-            <p class="range-field">
-              <label for="eqLowGain">低域</label>
-              <input type="range" id="eqLowGain" min="-40" max="40" step="1" value="0">
-            </p>
-            <p class="range-field">
-              <label for="eqMidGain">中域</label>
-              <input type="range" id="eqMidGain" min="-40" max="40" step="1" value="0">
-            </p>
-            <p class="range-field">
-              <label for="eqHighGain">高域</label>
-              <input type="range" id="eqHighGain" min="-40" max="40" step="1" value="0">
-            </p>
-          </div>
-          <p class="range-field">
-            <label for="volumeControl">音量</label>
-            <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1"/>
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      M.AutoInit();
+<div class="container">
+  <h1>Simple Music Player</h1>
+  <input type="file" id="audio-file" accept="audio/*">
+  <audio id="audio-player" controls></audio>
+</div>
 
-      const audioPlayer = document.getElementById('audioPlayer');
-      const playButton = document.getElementById('playButton');
-      const addExternalLinkButton = document.getElementById('addExternalLink');
-      const externalLinkInput = document.getElementById('externalLink');
-      const volumeControl = document.getElementById('volumeControl');
-      const errorText = document.querySelector('.error-text');
-      const fileInput = document.getElementById('fileInput');
-      const eqLowGain = document.getElementById('eqLowGain');
-      const eqMidGain = document.getElementById('eqMidGain');
-      const eqHighGain = document.getElementById('eqHighGain');
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContext.createMediaElementSource(audioPlayer);
-      const eqLow = audioContext.createBiquadFilter();
-      const eqMid = audioContext.createBiquadFilter();
-      const eqHigh = audioContext.createBiquadFilter();
+<script>
+  document.getElementById('audio-file').addEventListener('change', function(event) {
+    const audioPlayer = document.getElementById('audio-player');
+    const file = this.files[0];
+    const objectURL = URL.createObjectURL(file);
+    audioPlayer.src = objectURL;
+  });
+</script>
 
-      eqLow.type = 'lowshelf';
-      eqMid.type = 'peaking';
-      eqHigh.type = 'highshelf';
-
-      source.connect(eqLow);
-      eqLow.connect(eqMid);
-      eqMid.connect(eqHigh);
-      eqHigh.connect(audioContext.destination);
-
-      addExternalLinkButton.addEventListener('click', function() {
-        const externalLink = externalLinkInput.value.trim();
-        if (externalLink === '' || !externalLink.startsWith('https://')) {
-          errorText.style.display = 'block';
-          errorText.style.color = 'red';
-        } else {
-          errorText.style.display = 'none';
-          errorText.style.color = '';
-          externalLinkInput.value = '';
-        }
-      });
-
-      fileInput.addEventListener('change', function() {
-        const files = fileInput.files;
-        if (files.length > 0) {
-          const file = files[0];
-          const objectUrl = URL.createObjectURL(file);
-          audioPlayer.src = objectUrl;
-
-          audioPlayer.play().catch(error => {
-            console.error('Error playing audio file:', error);
-          });
-        }
-      });
-
-      volumeControl.addEventListener('input', function() {
-        audioPlayer.volume = volumeControl.value;
-      });
-
-      eqLowGain.addEventListener('input', function() {
-        eqLow.gain.value = eqLowGain.value;
-      });
-
-      eqMidGain.addEventListener('input', function() {
-        eqMid.gain.value = eqMidGain.value;
-      });
-
-      eqHighGain.addEventListener('input', function() {
-        eqHigh.gain.value = eqHighGain.value;
-      });
-    });
-  </script>
 </body>
 </html>
