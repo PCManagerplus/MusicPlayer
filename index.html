@@ -99,20 +99,74 @@
 <!-- Materialize JavaScript CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
-  const container = document.querySelector('.container');
+  const audioPlayer = document.getElementById('audio-player');
+  const lowSlider = document.getElementById('low');
+  const midSlider = document.getElementById('mid');
+  const highSlider = document.getElementById('high');
+  const volumeSlider = document.getElementById('volume');
   const canvas = document.getElementById('spectrum');
+  const ctx = canvas.getContext('2d');
 
-  function adjustSize() {
-    const width = window.innerWidth * 0.8; // ウィンドウ幅の80%を使用
-    const height = window.innerHeight; // ウィンドウの高さを使用
-    container.style.maxWidth = width + 'px';
-    canvas.style.width = width + 'px';
-    canvas.style.height = '200px'; // キャンバスの高さは固定値
+  function updatePlayer(source) {
+    const audioContext = new AudioContext();
+    const sourceNode = audioContext.createMediaElementSource(audioPlayer);
+    const analyser = audioContext.createAnalyser();
+
+    sourceNode.connect(analyser);
+    analyser.connect(audioContext.destination);
+    audioPlayer.src = source;
+
+    function draw() {
+      requestAnimationFrame(draw);
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      dataArray.forEach(function(data) {
+        const barHeight = data / 2;
+
+        ctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
+
+        x += barWidth + 1;
+      });
+    }
+
+    draw();
   }
 
-  adjustSize(); // 初期サイズの調整
+  document.getElementById('audio-file').addEventListener('change', function(event) {
+    const file = this.files[0];
+    const objectURL = URL.createObjectURL(file);
+    console.log("File selected:", file);
+    updatePlayer(objectURL);
+  });
 
-  window.addEventListener('resize', adjustSize); // ウィンドウがリサイズされたときにサイズを調整
+  lowSlider.addEventListener('input', function() {
+    const value = parseFloat(this.value);
+    lowFilter.gain.value = value;
+  });
+
+  midSlider.addEventListener('input', function() {
+    const value = parseFloat(this.value);
+    midFilter.gain.value = value;
+  });
+
+  highSlider.addEventListener('input', function() {
+    const value = parseFloat(this.value);
+    highFilter.gain.value = value;
+  });
+
+  volumeSlider.addEventListener('input', function() {
+    const value = parseFloat(this.value);
+    gainNode.gain.value = value;
+  });
 </script>
 
 </body>
