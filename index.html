@@ -64,11 +64,6 @@
       width: 80%;
       margin: 0 auto;
     }
-
-    .output-device {
-      width: 80%;
-      margin: 20px auto;
-    }
   </style>
 </head>
 <body>
@@ -98,13 +93,6 @@
     <label>音量</label>
     <input type="range" class="volume-slider" id="volume" min="0" max="1" step="0.01" value="0.5">
   </div>
-
-  <div class="output-device">
-    <label for="output-select">出力デバイス:</label>
-    <select id="output-select">
-      <option value="default">デフォルト</option>
-    </select>
-  </div>
   
   <audio id="audio-player" controls></audio>
 </div>
@@ -117,7 +105,6 @@
   const midSlider = document.getElementById('mid');
   const highSlider = document.getElementById('high');
   const volumeSlider = document.getElementById('volume');
-  const outputSelect = document.getElementById('output-select');
 
   audioPlayer.addEventListener('loadedmetadata', function() {
     const audioContext = new AudioContext();
@@ -160,28 +147,6 @@
     if (audioContext.state === 'suspended') {
       audioContext.resume();
     }
-  });
-
-  navigator.mediaDevices.enumerateDevices().then(function(devices) {
-    devices.forEach(function(device) {
-      if (device.kind === 'audiooutput') {
-        const option = document.createElement('option');
-        option.text = device.label || 'スピーカー';
-        option.value = device.deviceId;
-        outputSelect.appendChild(option);
-      }
-    });
-  });
-
-  outputSelect.addEventListener('change', function() {
-    const deviceId = this.value;
-    audioPlayer.setSinkId(deviceId)
-      .then(function() {
-        console.log('出力デバイスが変更されました');
-      })
-      .catch(function(err) {
-        console.error('出力デバイスを変更できませんでした:', err);
-      });
   });
 
   document.getElementById('audio-file').addEventListener('change', function(event) {
