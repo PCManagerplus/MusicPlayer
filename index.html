@@ -51,18 +51,10 @@
       margin-top: 20px;
     }
 
-    .eq-sliders {
-      margin-bottom: 20px;
-    }
-
-    .eq-slider {
-      width: 80%;
-      margin: 0 auto 10px;
-    }
-
-    .volume-slider {
-      width: 80%;
-      margin: 0 auto;
+    canvas {
+      width: 100%;
+      height: 200px;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -95,6 +87,7 @@
   </div>
   
   <audio id="audio-player" controls></audio>
+  <canvas id="spectrum"></canvas>
 </div>
 
 <!-- Materialize JavaScript CDN -->
@@ -105,6 +98,8 @@
   const midSlider = document.getElementById('mid');
   const highSlider = document.getElementById('high');
   const volumeSlider = document.getElementById('volume');
+  const canvas = document.getElementById('spectrum');
+  const ctx = canvas.getContext('2d');
 
   audioPlayer.addEventListener('loadedmetadata', function() {
     const audioContext = new AudioContext();
@@ -147,14 +142,6 @@
     if (audioContext.state === 'suspended') {
       audioContext.resume();
     }
-  });
 
-  document.getElementById('audio-file').addEventListener('change', function(event) {
-    const file = this.files[0];
-    const objectURL = URL.createObjectURL(file);
-    audioPlayer.src = objectURL;
-  });
-</script>
-
-</body>
-</html>
+    const analyser = audioContext.createAnalyser();
+    source.connect(analyser
