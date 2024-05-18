@@ -15,11 +15,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
     }
 
     body {
-      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background: linear-gradient(to right, violet, indigo, blue, green, yellow, orange, red);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
     }
@@ -126,7 +125,7 @@
     gainNode.connect(analyser);
     analyser.connect(audioContext.destination);
 
-    canvas.width = window.innerWidth * 0.8; // キャンバスの幅をウィンドウ幅の80%に設定
+    canvas.width = canvas.parentNode.offsetWidth * 0.8; // キャンバスの幅を親要素の幅の80%に設定
     canvas.height = 200;
 
     function draw() {
@@ -158,6 +157,10 @@
     const file = this.files[0];
     const objectURL = URL.createObjectURL(file);
     audioPlayer.src = objectURL;
+    updateEqualizer();
+  });
+
+  window.addEventListener('resize', function() {
     updateEqualizer();
   });
 
