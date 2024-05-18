@@ -13,8 +13,8 @@
       overflow: hidden;
       border-radius: 10px;
       box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
-      width: 100%; /* プレーヤーを親要素の幅いっぱいに広げる */
-      height: 500px; /* プレーヤーの高さを調整 */
+      width: 100%;
+      height: 500px;
     }
 
     .player-container:hover .player-controls {
@@ -54,17 +54,14 @@
         <div class="input-field">
           <input id="externalLink" type="text" class="validate">
           <label for="externalLink">外部リンクから曲を追加</label>
-          <!-- エラーメッセージ -->
           <span class="error-text">https://で始まる言葉を入力してください</span>
         </div>
         <button class="btn waves-effect waves-light" id="addExternalLink">追加</button>
       </div>
     </div>
-    <!-- ローカルファイルを読み込むためのフォーム -->
     <form id="fileForm" class="row">
       <div class="col s12 m6 offset-m3">
         <div class="file-field input-field">
-          <!-- アニメーションを追加 -->
           <div class="btn waves-effect waves-light">
             <span>ローカルファイルを選択</span>
             <input type="file" id="fileInput">
@@ -108,11 +105,9 @@
     </div>
   </div>
 
-  <!-- Materialize JavaScriptのリンク -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Materialize CSSの初期化
       M.AutoInit();
 
       const audioPlayer = document.getElementById('audioPlayer');
@@ -131,7 +126,6 @@
       const eqMid = audioContext.createBiquadFilter();
       const eqHigh = audioContext.createBiquadFilter();
 
-      // イコライザーの設定
       eqLow.type = 'lowshelf';
       eqMid.type = 'peaking';
       eqHigh.type = 'highshelf';
@@ -141,40 +135,35 @@
       eqMid.connect(eqHigh);
       eqHigh.connect(audioContext.destination);
 
-      // 外部リンク追加ボタンのクリックイベント
       addExternalLinkButton.addEventListener('click', function() {
         const externalLink = externalLinkInput.value.trim();
         if (externalLink === '' || !externalLink.startsWith('https://')) {
-          // エラーメッセージを表示
           errorText.style.display = 'block';
-          // 赤色に変更
           errorText.style.color = 'red';
         } else {
-          // エラーメッセージを非表示に
           errorText.style.display = 'none';
-          // 元の色に戻す
           errorText.style.color = '';
-          externalLinkInput.value = ''; // 入力フィールドをクリア
+          externalLinkInput.value = '';
         }
       });
 
-      // ローカルファイル選択フォームの変更イベント
       fileInput.addEventListener('change', function() {
         const files = fileInput.files;
         if (files.length > 0) {
           const file = files[0];
           const objectUrl = URL.createObjectURL(file);
           audioPlayer.src = objectUrl;
-          audioPlayer.play();
+
+          audioPlayer.play().catch(error => {
+            console.error('Error playing audio file:', error);
+          });
         }
       });
 
-      // 音量調節スライダーの変更イベント
       volumeControl.addEventListener('input', function() {
-        audioPlayer.volume = volumeControl.value; // 音量をスライダーの値に設定
+        audioPlayer.volume = volumeControl.value;
       });
 
-      // イコライザーのスライダーの変更イベント
       eqLowGain.addEventListener('input', function() {
         eqLow.gain.value = eqLowGain.value;
       });
