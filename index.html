@@ -58,8 +58,6 @@
     }
 
     canvas {
-      width: 100%;
-      height: 200px;
       margin-top: 20px;
     }
   </style>
@@ -127,25 +125,32 @@
     gainNode.connect(analyser);
     analyser.connect(audioContext.destination);
 
-    lowSlider.addEventListener('input', function() {
-      const value = parseFloat(this.value);
-      lowFilter.gain.value = value;
-    });
+    canvas.width = window.innerWidth * 0.8; // キャンバスの幅をウィンドウ幅の80%に設定
+    canvas.height = 200;
 
-    midSlider.addEventListener('input', function() {
-      const value = parseFloat(this.value);
-      midFilter.gain.value = value;
-    });
+    function draw() {
+      requestAnimationFrame(draw);
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
 
-    highSlider.addEventListener('input', function() {
-      const value = parseFloat(this.value);
-      highFilter.gain.value = value;
-    });
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    volumeSlider.addEventListener('input', function() {
-      const value = parseFloat(this.value);
-      gainNode.gain.value = value;
-    });
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      dataArray.forEach(function(data) {
+        const barHeight = data / 2;
+
+        ctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
+
+        x += barWidth + 1;
+      });
+    }
+
+    draw();
   }
 
   document.getElementById('audio-file').addEventListener('change', function(event) {
