@@ -9,16 +9,33 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     .container {
       text-align: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 10px;
     }
 
     h1 {
@@ -34,9 +51,23 @@
       margin-top: 20px;
     }
 
+    .eq-sliders {
+      margin-bottom: 20px;
+    }
+
     .eq-slider {
       width: 80%;
-      margin: 0 auto 20px;
+      margin: 0 auto 10px;
+    }
+
+    .volume-slider {
+      width: 80%;
+      margin: 0 auto;
+    }
+
+    .output-device {
+      width: 80%;
+      margin: 20px auto;
     }
   </style>
 </head>
@@ -62,6 +93,18 @@
     <label>高音</label>
     <input type="range" class="eq-slider" id="high" min="0" max="10" value="5">
   </div>
+
+  <div class="volume-slider">
+    <label>音量</label>
+    <input type="range" class="volume-slider" id="volume" min="0" max="1" step="0.01" value="0.5">
+  </div>
+
+  <div class="output-device">
+    <label for="output-select">出力デバイス:</label>
+    <select id="output-select">
+      <option value="default">デフォルト</option>
+    </select>
+  </div>
   
   <audio id="audio-player" controls></audio>
 </div>
@@ -73,6 +116,8 @@
   const lowSlider = document.getElementById('low');
   const midSlider = document.getElementById('mid');
   const highSlider = document.getElementById('high');
+  const volumeSlider = document.getElementById('volume');
+  const outputSelect = document.getElementById('output-select');
 
   audioPlayer.addEventListener('loadedmetadata', function() {
     const audioContext = new AudioContext();
@@ -80,6 +125,7 @@
     const lowFilter = audioContext.createBiquadFilter();
     const midFilter = audioContext.createBiquadFilter();
     const highFilter = audioContext.createBiquadFilter();
+    const gainNode = audioContext.createGain();
 
     lowFilter.type = 'lowshelf';
     midFilter.type = 'peaking';
@@ -88,7 +134,8 @@
     source.connect(lowFilter);
     lowFilter.connect(midFilter);
     midFilter.connect(highFilter);
-    highFilter.connect(audioContext.destination);
+    highFilter.connect(gainNode);
+    gainNode.connect(audioContext.destination);
 
     lowSlider.addEventListener('input', function() {
       const value = parseFloat(this.value);
@@ -104,6 +151,37 @@
       const value = parseFloat(this.value);
       highFilter.gain.value = value;
     });
+
+    volumeSlider.addEventListener('input', function() {
+      const value = parseFloat(this.value);
+      gainNode.gain.value = value;
+    });
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+  });
+
+  navigator.mediaDevices.enumerateDevices().then(function(devices) {
+    devices.forEach(function(device) {
+      if (device.kind === 'audiooutput') {
+        const option = document.createElement('option');
+        option.text = device.label || 'スピーカー';
+        option.value = device.deviceId;
+        outputSelect.appendChild(option);
+      }
+    });
+  });
+
+  outputSelect.addEventListener('change', function() {
+    const deviceId = this.value;
+    audioPlayer.setSinkId(deviceId)
+      .then(function() {
+        console.log('出力デバイスが変更されました');
+      })
+      .catch(function(err) {
+        console.error('出力デバイスを変更できませんでした:', err);
+      });
   });
 
   document.getElementById('audio-file').addEventListener('change', function(event) {
