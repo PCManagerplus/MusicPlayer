@@ -78,6 +78,11 @@
     </div>
   </div>
 
+  <div class="input-field">
+    <input type="text" id="audio-url" placeholder="音楽ファイルのURLを入力">
+    <button class="btn" id="load-url">読み込み</button>
+  </div>
+
   <div class="eq-sliders">
     <label>低音</label>
     <input type="range" class="eq-slider" id="low" min="0" max="10" value="5">
@@ -211,6 +216,14 @@
     const objectURL = URL.createObjectURL(file);
     audioPlayer.src = objectURL;
     updateEqualizer();
+  });
+
+  document.getElementById('load-url').addEventListener('click', function() {
+    const url = document.getElementById('audio-url').value;
+    if (url) {
+      audioPlayer.src = url;
+      updateEqualizer();
+    }
   });
 
   window.addEventListener('resize', function() {
