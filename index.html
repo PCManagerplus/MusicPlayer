@@ -78,11 +78,6 @@
     </div>
   </div>
 
-  <div class="input-field">
-    <input type="text" id="audio-url" placeholder="音楽ファイルのURLを入力">
-    <button class="btn" id="load-url">読み込み</button>
-  </div>
-
   <div class="eq-sliders">
     <label>低音</label>
     <input type="range" class="eq-slider" id="low" min="0" max="10" value="5">
@@ -146,62 +141,50 @@
   const canvas = document.getElementById('spectrum');
   const ctx = canvas.getContext('2d');
 
-  let audioContext;
-  let sourceNode;
-  let analyser;
-  let lowFilter;
-  let midFilter;
-  let highFilter;
-  let gainNode;
+  function updateEqualizer() {
+    const audioContext = new AudioContext();
+    const sourceNode = audioContext.createMediaElementSource(audioPlayer);
+    const analyser = audioContext.createAnalyser();
+    const lowFilter = audioContext.createBiquadFilter();
+    const midFilter = audioContext.createBiquadFilter();
+    const highFilter = audioContext.createBiquadFilter();
+    const gainNode = audioContext.createGain();
 
-  function setupAudioContext() {
-    if (!audioContext) {
-      audioContext = new AudioContext();
-      sourceNode = audioContext.createMediaElementSource(audioPlayer);
-      analyser = audioContext.createAnalyser();
-      lowFilter = audioContext.createBiquadFilter();
-      midFilter = audioContext.createBiquadFilter();
-      highFilter = audioContext.createBiquadFilter();
-      gainNode = audioContext.createGain();
+    lowFilter.type = 'lowshelf';
+    midFilter.type = 'peaking';
+    highFilter.type = 'highshelf';
 
-      lowFilter.type = 'lowshelf';
-      midFilter.type = 'peaking';
-      highFilter.type = 'highshelf';
+    sourceNode.connect(lowFilter);
+    lowFilter.connect(midFilter);
+    midFilter.connect(highFilter);
+    highFilter.connect(gainNode);
+    gainNode.connect(analyser);
+    analyser.connect(audioContext.destination);
 
-      sourceNode.connect(lowFilter);
-      lowFilter.connect(midFilter);
-      midFilter.connect(highFilter);
-      highFilter.connect(gainNode);
-      gainNode.connect(analyser);
-      analyser.connect(audioContext.destination);
+    canvas.width = canvas.parentNode.offsetWidth * 0.8;
+    canvas.height = 200;
 
-      canvas.width = canvas.parentNode.offsetWidth * 0.8;
-      canvas.height = 200;
+    function draw() {
+      requestAnimationFrame(draw);
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
 
-      function draw() {
-        requestAnimationFrame(draw);
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        analyser.getByteFrequencyData(dataArray);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
 
-        const barWidth = (canvas.width / bufferLength) * 2.5;
-        let x = 0;
-
-        dataArray.forEach(function(data) {
-          const barHeight = data / 2;
-          ctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
-          ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
-          x += barWidth + 1;
-        });
-      }
-
-      draw();
+      dataArray.forEach(function(data) {
+        const barHeight = data / 2;
+        ctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
+        x += barWidth + 1;
+      });
     }
-  }
 
-  function updateFilters() {
+    draw();
+
     lowSlider.addEventListener('input', function() {
       const value = parseFloat(this.value);
       lowFilter.gain.value = value;
@@ -227,17 +210,7 @@
     const file = this.files[0];
     const objectURL = URL.createObjectURL(file);
     audioPlayer.src = objectURL;
-    setupAudioContext();
-    updateFilters();
-  });
-
-  document.getElementById('load-url').addEventListener('click', function() {
-    const url = document.getElementById('audio-url').value;
-    if (url) {
-      audioPlayer.src = url;
-      setupAudioContext();
-      updateFilters();
-    }
+    updateEqualizer();
   });
 
   window.addEventListener('resize', function() {
