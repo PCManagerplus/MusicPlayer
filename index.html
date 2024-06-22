@@ -120,6 +120,7 @@
     document.body.appendChild(installButton);
 
     installButton.addEventListener('click', () => {
+      playClickSound();
       installButton.remove();
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
@@ -140,6 +141,12 @@
   const volumeSlider = document.getElementById('volume');
   const canvas = document.getElementById('spectrum');
   const ctx = canvas.getContext('2d');
+  
+  const clickSound = new Audio('https://pcmanagerplus.github.io/media.web/andTV/ui/pano_click.ogg');
+  
+  function playClickSound() {
+    clickSound.play();
+  }
 
   function updateEqualizer() {
     const audioContext = new AudioContext();
@@ -212,6 +219,8 @@
     audioPlayer.src = objectURL;
     updateEqualizer();
   });
+
+  document.querySelector('.btn').addEventListener('click', playClickSound);
 
   window.addEventListener('resize', function() {
     canvas.width = canvas.parentNode.offsetWidth * 0.8;
