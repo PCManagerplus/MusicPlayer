@@ -91,6 +91,11 @@
     <label>音量</label>
     <input type="range" class="volume-slider" id="volume" min="0" max="1" step="0.01" value="0.5">
   </div>
+
+  <label>
+    <input type="checkbox" id="loop-toggle">
+    <span>ループ</span>
+  </label>
   
   <audio id="audio-player" controls></audio>
   <canvas id="spectrum"></canvas>
@@ -227,6 +232,9 @@
     canvas.height = 200;
   });
 
+  document.getElementById('loop-toggle').addEventListener('change', function() {
+    audioPlayer.loop = this.checked;
+  });
 </script>
 
 </body>
